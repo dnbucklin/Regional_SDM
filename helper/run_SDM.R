@@ -6,28 +6,25 @@
 
 # If picking up from a previous run, provide the full file location to the saved rdata file (no file extension)
 # holding these paths. For new runs, this file is automatically saved as "runSDM_paths" in the 
-# 'loc_RDataOut' folder of the original run.
+# 'loc_model' folder of the original run.
 
 # Optional arguments for all runs include:
 # 1. begin_step: specify as the prefix of the step to begin with: one of ("1","2","3","4","4b","4c","5"). Defaults to "1".
 # 2. model_rdata: when beginning after step 3, you need to specify the Rdata file name (no file extension) for the model previously created. 
-# Will be looked for in the 'loc_RDataOut' folder
+# Will be looked for in the 'loc_model' folder
 # 3. prompt: if TRUE, the function will stop after each script, and ask if you want to continue. Defaults to FALSE.
 
 run_SDM <- function(
-  loc_scripts, 
-  loc_spReaches,
+  loc_scripts,
+  model_species,
+  nm_presFile,
   nm_db_file,
-  loc_bkgReach, 
-  loc_envVars,
-  loc_otherSpatial,
+  loc_model,
+  nm_envVars,
   nm_allflowlines,
   nm_refBoundaries,
   nm_studyAreaExtent,
   nm_aquaArea = NULL,
-  loc_RDataOut,
-  loc_outVector,
-  loc_outMetadata,
   model_comments = "",
   metaData_comments = "",
   modeller = NULL,
@@ -38,50 +35,51 @@ run_SDM <- function(
   huc_level = NULL,
   prompt = FALSE
 ) {
-  
   if ((hasArg(add_vars) | hasArg(remove_vars)) & !begin_step %in% c("1","2")) 
     stop("Need to begin on step 1 or 2 if adding or removing variables.")
   if (hasArg(huc_level) & begin_step != "1") 
     stop("Need to begin on step 1 if using HUC subset.")
-  if (hasArg(huc_level) & !huc_level %in% c(2,4,6,8,10,12))
+  if (hasArg(huc_level) && !huc_level %in% c(2,4,6,8,10,12))
     stop("Valid 'huc_level' values are 2, 4, 6, 8, 10, or 12.")
   
   if (begin_step != "1") {
     if (begin_step %in% c("2","3")) {
       message("Loading most recent saved runSDM settings...")
-      load(paste0(loc_RDataOut, "/runSDM_paths.Rdata"))
+      load(paste0(loc_model, "/" , model_species, "/runSDM_paths.Rdata"))
     } else {
-      if (is.null(model_rdata) | is.null(loc_RDataOut)) {
-        stop("Must provide both 'loc_RDataOut' and 'model_rdata' for continuing a model run.")
+      if (is.null(model_rdata) | is.null(loc_model)) {
+        stop("Must provide both 'loc_model' and 'model_rdata' for continuing a model run.")
       } else {
-        load(paste0(loc_RDataOut, "/runSDM_paths.Rdata"))
+        load(paste0(loc_model, "/" , model_species, "/runSDM_paths.Rdata"))
       }
     }
     # re-write modified variables
     for (na in names(fn_args)) {
       if (eval(parse(text = paste0("hasArg(",na,")")))) fn_args[[na]] <- eval(parse(text=na))
     }
+    # set presfile to a previously prepared presence file
+    if (hasArg(nm_presFile)) fn_args$baseName <- gsub(".csv$", "", nm_presFile)
     rm(na)
     
   } else {
+    baseName <- strsplit(basename(nm_presFile),"\\.")[[1]][[1]]
+    baseName <- paste0(baseName, "_", gsub(" ","_",gsub(c("-|:"),"",as.character(Sys.time()))))
     fn_args <- list(
       loc_scripts = loc_scripts, 
-      loc_spReaches = loc_spReaches,
+      model_species = model_species,
+      nm_presFile = nm_presFile,
       nm_db_file = nm_db_file,
-      loc_bkgReach = loc_bkgReach, 
-      loc_envVars = loc_envVars,
-      loc_otherSpatial = loc_otherSpatial,
+      loc_model = loc_model,
+      nm_envVars = nm_envVars,
       nm_allflowlines = nm_allflowlines,
       nm_refBoundaries = nm_refBoundaries,
       nm_studyAreaExtent = nm_studyAreaExtent,
       nm_aquaArea = nm_aquaArea,
-      loc_RDataOut = loc_RDataOut,
-      loc_outVector = loc_outVector,
-      loc_outMetadata = loc_outMetadata,
       model_comments = model_comments,
       metaData_comments = metaData_comments,
       modeller = modeller,
-      huc_level = huc_level)
+      huc_level = huc_level,
+      baseName = baseName)
   }
   
   # add comments for added/excluded vars
@@ -100,7 +98,8 @@ run_SDM <- function(
     fn_args$metaData_comments <- metaData_comments
   }
   # save fn_args
-  save(fn_args, file = paste0(loc_RDataOut, "/" , "runSDM_paths.Rdata"))
+  dir.create(paste0(loc_model, "/" , model_species), showWarnings = F)
+  save(fn_args, file = paste0(loc_model, "/" , model_species, "/runSDM_paths.Rdata"))
   
   # assign objects
   for(i in 1:length(fn_args)) assign(names(fn_args)[i], fn_args[[i]])
@@ -128,7 +127,7 @@ run_SDM <- function(
   
   if (!begin_step %in% c("1","2","3")) {
     if (is.null(model_rdata)) stop("Must provide .Rdata file name if starting after step 3.")
-    load(paste0(loc_RDataOut, "/", model_rdata, ".Rdata"))
+    load(paste0(loc_model, "/", model_species, "/outputs/rdata/", model_rdata, ".Rdata"))
   }
   
   # run scripts
@@ -169,4 +168,3 @@ run_SDM <- function(
     }
   }
 }
-

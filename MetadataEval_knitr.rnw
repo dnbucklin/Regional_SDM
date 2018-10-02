@@ -353,7 +353,7 @@ if (!is.null(nm_aquaArea)) {
                                              by = list(results_shape$wacomid),
                                              FUN = function(x) c(mn = mean(x, na.rm = TRUE), n = length(x))))
   colnames(aqua.pred) <- c("comid","pred","count")
-  area.wb.pred <- merge(aquaPolys, aqua.pred, by = "comid")
+  area.wb.pred <- sp::merge(aquaPolys, aqua.pred, by = "comid")
   area.wb.pred$colcode <- plotclr[findInterval(area.wb.pred$pred, class$brks)]
 
   plot(area.wb.pred, col = area.wb.pred$colcode, border = NA, add = TRUE)
@@ -367,7 +367,7 @@ for (i in 1:nclr) {
 }
 
 plot(spTransform( referenceBoundaries[!referenceBoundaries$STATE_NAME %in% studyAreaExtent$STATE_NAME,]
-                  , CRSobj = results_shape@proj4string), add=T, border="gray50", lwd=0.3, col = "white")
+                  , CRSobj = results_shape@proj4string), add=T, border="gray50", lwd=0.3)
 plot(spTransform( studyAreaExtent
                   , CRSobj = results_shape@proj4string), add=T, border="black", lwd=0.7)
 #title(main="Creek Heelsplittler" ) # sub=" Equal-Width Class Intervals"
