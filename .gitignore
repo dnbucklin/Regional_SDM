@@ -14,7 +14,7 @@
 # user_run_SDM user-files
 
 # RStudio project
-*.Rproj
+.Rproj
 .Rproj.user
 *.Rdata
 
