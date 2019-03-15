@@ -8,6 +8,7 @@
 # Session Data files
 .RData
 .Rproj.user
+*.Rproj
 
 *.gitignore
 
