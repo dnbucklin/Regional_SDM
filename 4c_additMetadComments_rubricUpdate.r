@@ -42,8 +42,15 @@ if (dat.in.db$metadata_comments != newText) {
   dbExecute(db, SQLquery)
 }
 
+# empty data frames for non-mobi usage
+localityData <- data.frame(ELEMENT_GLOBAL_ID = ElementNames$EGT_ID, 
+                           pres_dat_eval_rubric = NA, bison_use = 0, gbif_use = 0, inat_use = 0, 
+                           other_use = 0, MJD_sufficient = NA, MJD_only = 1, status = NA)
+reviewerData <- data.frame(EGT_ID = ElementNames$EGT_ID, response = NA, date_completed = NA)
+
 ## update Model Evaluation and Use data (rubric table) ----
 # get most recent data from the tracking DB for two of the rubric table fields that may vary
+try({
 cn <- odbcConnect("mobi_spp_tracking")
 sql <- paste0("SELECT FinalSppList.ELEMENT_GLOBAL_ID, LocalityData.pres_dat_eval_rubric, 
               LocalityData.bison_use, LocalityData.gbif_use, LocalityData.inat_use, 
@@ -58,6 +65,7 @@ sql <- paste0("SELECT Reviewer.EGT_ID, Reviewer.response, Reviewer.date_complete
 reviewerData <- sqlQuery(cn, sql)
 close(cn)
 rm(cn)
+}, silent = T)
 
 # fill status if it is NA
 localityData[is.na(localityData$status),"status"] <- "in progress"

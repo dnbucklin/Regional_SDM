@@ -84,8 +84,8 @@ Species distribution model for \Sexpr{as.character(ElementNames$CommName)} (\tex
 \medskip
 \noindent 
 \Sexpr{as.character(project_overview)} \\
-\smallskip
 \noindent
+\smallskip
 This SDM incorporates the number of known and background locations indicated in Table 1, modeled with the random forests routine {\protect\NoHyper\cite{breiman2001, iverson2004}\protect\endNoHyper} in the R statistical environment {\protect\NoHyper\cite{liaw2002, r}\protect\endNoHyper}. We validated the model by jackknifing (also called leave-one-out {\protect\NoHyper\cite{fielding1997, fielding2002, pearson2007}\protect\endNoHyper}) by \Sexpr{tolower(as.character(group$JackknType))} for a total of \Sexpr{length(group$vals)} groups. The statistics in Table 2 report the mean and variance of validation statistics for these jackknifing runs.\\
 \medskip
 \small
@@ -147,7 +147,7 @@ fielding2002}\protect\endNoHyper}.
 if (exists("n.var")) {
   txt <- paste0("Validation runs used ",n.var," environmental 
   variables, the most important of ",OriginalNumberOfEnvars," 
-  variables (top ",(1-envarPctile)*100," percent).
+  variables (top ",(1-envarPctile)*100," percent, after removal of highly correlated variables).
   Each tree was built with ",trRes[[1]]$mtry," variables 
   tried at each split (mtry) and ",trRes[[1]]$ntree," trees built.")
 } else { 
@@ -425,11 +425,13 @@ tmap_mode("plot")
 ## this is stamen-toner
 #basetiles <- read_osm(studyAreaExtent, type = "stamen-toner", ext = 1.1)
 ## this is Esri.WorldGrayCanvas
-#mtype <- 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}.png?'
+# mtype <- 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}.png?'
 
 ## this is CartoDB.Positron
 mtype <- 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
-basetiles <- read_osm(bbox, type = mtype, ext = 1.1)
+basetiles <- read_osm(bbox, ext = 1.1)
+try(basetiles <- read_osm(bbox, type = mtype, ext = 1.1))
+
 # plot it
 qtm(basetiles) + 
   tm_shape(results_shape, name="modeled suitability") + # stream linework
