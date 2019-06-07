@@ -75,7 +75,7 @@ newL <- parLapply(cl, x = fullL, fun = function(x) {
   nnm <- paste0(temp, "/", subnm)
   
   # crop w/clip
-  call <- paste0("gdalwarp -te ", paste(ext, collapse = " "), " -cutline ", clipshp, " ", path, " ", nnm, " -overwrite -q")
+  call <- paste0("gdalwarp -tr 30 30 -cutline ", clipshp, " -crop_to_cutline ", path, " ", nnm, " -overwrite -q")
   system(call)
   return(nnm)
 })
